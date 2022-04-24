@@ -1,0 +1,248 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<style>
+#messages
+{
+background-color:yellow;
+font-size:3;
+font-weight:bold;
+line-height:140%;
+}
+#status
+{
+background-color:red;
+font-size:4;
+font-weight:bold;
+color:white;
+line-height:140%;
+}
+#statusOnline
+{
+background-color:green;
+font-size:4;
+font-weight:bold;
+color:white;
+line-height:140%;
+}
+/* #messages3
+{
+background-color:yellow;
+font-size:3;
+font-weight:bold;
+line-height:140%;
+}
+#messages2
+{
+background-color:yellow;
+font-size:3;
+font-weight:bold;
+line-height:140%;
+} */
+#mainHeading
+{
+	text-align: center;
+}
+#messages4, #messages2,#messages3
+{
+	/*color: #4c4a37; font-family: 'Source Sans Pro', sans-serif; font-size: 18px; line-height: 32px; margin: 0 0 24px;*/
+
+	color: #7a7c7f; font-size: 29px; font-family: "Libre Baskerville", serif; line-height: 45px; text-align: center; text-shadow: 0 1px 1px #fff; padding-top: 20px;
+
+}
+#title
+{	
+	color: #7c795d; font-family: 'Trocchi', serif; font-size: 45px; font-weight: normal; line-height: 48px; text-align: center; margin: 0; text-decoration: underline;
+}
+
+
+
+</style>
+  <head>
+    <title>Smart Irrigation System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.js" type="text/javascript"></script>
+	<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+	<script type = "text/javascript" 
+         src = "https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script type = "text/javascript">
+	
+
+
+	function onConnectionLost(){
+	console.log("connection lost");
+	document.getElementById("status").innerHTML = "System Status : Connection Lost";
+	document.getElementById("messages").innerHTML ="System Status : Connection Lost";
+	document.getElementById("statusOnline").id = "status"; 
+	connected_flag=0;
+	}
+	function onFailure(message) {
+		console.log("Failed");
+		document.getElementById("messages").innerHTML = "System Status : Connection Failed- Retrying";
+        setTimeout(MQTTconnect, reconnectTimeout);
+        }
+
+		function onMessageArrived(r_message)
+		{
+			var today = new Date();
+			var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+			var zone = new Date().toLocaleTimeString('en-us',{timeZoneName:'short'}).split(' ')[2]
+			out_msg = " ";
+			out_msg=out_msg+"Current Water Applied: "+r_message.payloadString.substring(0,5)+ " milliliters <br>";
+			out_msg=out_msg + "Water Status Change Time: "+ time + " " + zone + "<br>";
+			//out_msg=out_msg+"Subscribed Topic: "+r_message.destinationName;
+			console.log("Current Water Applied: ",r_message.payloadString.substring(0,5));
+			console.log(out_msg);
+			document.getElementById("messages3").innerHTML = out_msg;
+		}
+
+		function onMessageArrived2(r_message)
+		{
+			var today = new Date();
+			var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+			var zone = new Date().toLocaleTimeString('en-us',{timeZoneName:'short'}).split(' ')[2]
+			out_msg2 = " ";			
+			out_msg2=out_msg2+"Moisture Content: "+r_message.payloadString+" %<br>";
+			out_msg2=out_msg2 + "Moisture Data Updation Time: "+time + " " + zone +" <br>";
+			//out_msg2=out_msg2+"Subscribed Topic: "+r_message.destinationName;
+			console.log("Moisture Content: ",r_message.payloadString);
+			console.log(out_msg2);
+			document.getElementById("messages2").innerHTML = out_msg2;
+		}
+
+
+		function onMessageArrived4(r_message)
+		{
+			var today = new Date();
+			var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+			var zone = new Date().toLocaleTimeString('en-us',{timeZoneName:'short'}).split(' ')[2]
+			const obj = JSON.parse(r_message.payloadString);
+			out_msg2 = " ";			
+			out_msg2=out_msg2+"Weather Details: <br> Temperature: "+obj.temperature + " <br> Weather : "+obj.weather + "<br> PrecipitationProbability : " +obj.precipitationProbability + " <br> PrecipitationIntensity : " + obj.precipitationIntensity + " <br> ";
+			out_msg2=out_msg2 + "Weather Data Updation Time: "+time + " " + zone + "<br>";
+			//out_msg2=out_msg2+"Subscribed Topic: "+r_message.destinationName;
+			console.log("Moisture Content: ",r_message.payloadString);
+			console.log(out_msg2);
+			document.getElementById("messages4").innerHTML = out_msg2;
+		}
+
+	
+
+	function onConnected(recon,url){
+	console.log(" in onConnected " +reconn);
+	}
+
+	function onConnect() 
+	{
+		connected_flag=1
+		document.getElementById("status").innerHTML = "System Status : Online";
+		document.getElementById("status").id = "statusOnline"; 
+		console.log("on Connect "+connected_flag);
+		mqtt.subscribe("reading/watering");
+		console.log("started to subscribe ");
+	}
+	function onConnect2() 
+	{
+		mqtt2.subscribe("reading/moisture");
+		console.log("started to subscribe2 ");
+	}
+
+	function onConnect4() 
+	{	
+		mqtt4.subscribe("weather");
+		console.log("started to subscribe4 ");
+	}
+    
+	function MQTTconnect() {
+	document.getElementById("messages").innerHTML ="";
+
+
+
+	host="18.205.191.231";
+	port=9002;
+
+
+	
+	console.log("connecting to "+ host +" "+ port);
+	var x=Math.floor(Math.random() * 10000); 
+	var y=Math.floor(Math.random() * 10000);
+	var z=Math.floor(Math.random() * 10000);
+
+	var cname="orderform-"+x;
+	var cname2="orderform-"+y;
+	var cname4="orderform-"+z;
+	
+	mqtt = new Paho.MQTT.Client(host,port,cname);
+	mqtt2 = new Paho.MQTT.Client(host,port,cname2);
+	mqtt4 = new Paho.MQTT.Client(host,port,cname4);
+	//document.write("connecting to "+ host);
+	var options = {
+        timeout: 3,
+		onSuccess: onConnect,
+		onFailure: onFailure,
+      
+     };
+	var options2 = {
+        timeout: 3,
+		onSuccess: onConnect2,
+		onFailure: onFailure,
+      
+     };
+	 var options4 = {
+        timeout: 3,
+		onSuccess: onConnect4,
+		onFailure: onFailure,
+      
+     };
+        mqtt.onConnectionLost = onConnectionLost;
+		mqtt2.onConnectionLost = onConnectionLost;
+		mqtt4.onConnectionLost = onConnectionLost;
+
+        mqtt.onMessageArrived = onMessageArrived;
+		mqtt2.onMessageArrived = onMessageArrived2;
+		mqtt4.onMessageArrived = onMessageArrived4;
+		//mqtt.onConnected = onConnected;
+
+	mqtt.connect(options);
+	mqtt2.connect(options2);
+	mqtt4.connect(options4);
+	return false;
+  
+	}
+	
+	
+    </script>
+
+  </head>
+  <body onload="MQTTconnect()">
+	<div class="container" id="container1">
+    <h1 id="mainHeading">Smart Irrigation System</h1>
+	</div>
+	
+
+	<script>
+	var connected_flag = 0	
+	var mqtt;
+	var mqtt2;
+	var mqtt4;
+	var reconnectTimeout = 2000;
+	var host="18.205.191.231";
+	var port=9002;
+
+	</script>
+
+ 
+<div class="container" id="container3">
+	<div id="status">System Status: Offline</div>
+	</div>
+</div>
+<br>
+
+<div class="container" id="container2">
+	<p id="messages"></p> 
+	<h3 id="title"> Water Distribution </h3><p id="messages3"></p>
+	<h3 id="title"> Moisture Control </h3> <p id="messages2"></p>
+	<h3 id="title"> Weather Information </h3> <p id="messages4"></p>
+</div>
+  </body>
+</html>
